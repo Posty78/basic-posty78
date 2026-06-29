@@ -24,7 +24,6 @@
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { width: 100%; height: 100%; overflow: hidden; }
-
     body { font-family: var(--font); background: var(--bg); color: var(--white); }
 
     #map { position: absolute; inset: 0; z-index: 0; }
@@ -46,7 +45,7 @@
       white-space: nowrap;
     }
 
-    #top h1 { font-size: 16px; font-weight: 900; color: var(--green); letter-spacing: 0.05em; }
+    #top h1 { font-size: 16px; font-weight: 900; color: var(--green); }
 
     #btn-locate {
       height: 42px;
@@ -63,61 +62,129 @@
 
     #btn-locate:hover { opacity: 0.88; }
 
+    /* ─── Panneau résultats ─── */
     #results-panel {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
       z-index: 400;
-      background: rgba(0,0,0,0.92);
+      background: rgba(0,0,0,0.95);
       border-top: 2px solid var(--green);
       border-radius: 20px 20px 0 0;
       padding: 16px;
-      max-height: 55vh;
+      max-height: 60vh;
       overflow-y: auto;
       display: none;
       backdrop-filter: blur(12px);
     }
 
-    #results-panel h2 {
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .panel-header h2 {
       font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--green);
-      margin-bottom: 12px;
+    }
+
+    #close-results {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
     }
 
     .result-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(0,204,68,0.1);
+      background: rgba(0,204,68,0.04);
+      border: 1px solid rgba(0,204,68,0.15);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
     }
 
-    .result-item:last-child { border-bottom: none; }
-    .result-info { flex: 1; }
-    .result-name { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
-    .result-dist { font-size: 12px; font-family: var(--mono); color: var(--green); }
-    .result-addr { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .result-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
 
-    .btn-waze {
-      height: 38px;
-      padding: 0 14px;
-      background: #33ccff;
+    .result-num {
+      font-size: 11px;
+      font-weight: 700;
       color: #000;
+      background: var(--green);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .result-info { flex: 1; }
+
+    .result-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .result-dist {
+      font-size: 13px;
+      font-family: var(--mono);
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .result-details {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .result-details span {
+      display: block;
+    }
+
+    .result-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-nav {
+      flex: 1;
+      height: 38px;
       font-size: 13px;
       font-weight: 800;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      white-space: nowrap;
       font-family: var(--font);
-      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
     }
 
+    .btn-waze { background: #33ccff; color: #000; }
+    .btn-gmaps { background: #4285f4; color: #fff; }
+
+    /* ─── Loader ─── */
     #loader {
       position: absolute;
       inset: 0;
@@ -142,6 +209,39 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ─── Popup Leaflet custom ─── */
+    .leaflet-popup-content-wrapper {
+      background: rgba(0,0,0,0.92) !important;
+      border: 2px solid var(--green) !important;
+      border-radius: 12px !important;
+      color: var(--white) !important;
+      min-width: 220px;
+    }
+
+    .leaflet-popup-tip { background: var(--green) !important; }
+
+    .popup-content { padding: 4px; }
+    .popup-name { font-size: 15px; font-weight: 800; color: var(--green); margin-bottom: 8px; }
+    .popup-detail { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px; display: flex; gap: 6px; }
+    .popup-detail strong { color: var(--white); min-width: 60px; }
+    .popup-btns { display: flex; gap: 8px; margin-top: 10px; }
+    .popup-btn {
+      flex: 1;
+      height: 34px;
+      font-size: 12px;
+      font-weight: 800;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-btn-waze { background: #33ccff; color: #000; }
+    .popup-btn-gmaps { background: #4285f4; color: #fff; }
+
     .leaflet-control-zoom a {
       background: #111 !important;
       color: var(--white) !important;
@@ -152,15 +252,6 @@
       background: rgba(0,0,0,0.5) !important;
       color: var(--muted) !important;
       font-size: 10px !important;
-    }
-
-    #close-results {
-      float: right;
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 20px;
-      cursor: pointer;
     }
 
     @media (max-width: 480px) {
@@ -185,10 +276,10 @@
 </div>
 
 <div id="results-panel">
-  <h2>
-    Les 10 Basic Fit les plus proches
+  <div class="panel-header">
+    <h2>🏋️ Les 10 Basic Fit les plus proches</h2>
     <button id="close-results" onclick="closeResults()">✕</button>
-  </h2>
+  </div>
   <div id="results-list"></div>
 </div>
 
@@ -203,9 +294,9 @@
 
   const bfIcon = L.divIcon({
     className: '',
-    html: `<div style="width:28px;height:28px;background:#00cc44;border:2px solid #000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;">🏋️</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14]
+    html: `<div style="width:30px;height:30px;background:#00cc44;border:2px solid #000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;">🏋️</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
   });
 
   const userIcon = L.divIcon({
@@ -219,14 +310,13 @@
   let userMarker = null;
   let userPos = null;
 
-  /* ─── Requête Overpass — France uniquement ─── */
   const query = `[out:json][timeout:30];
 area["ISO3166-1"="FR"][admin_level=2];
 (
   node["brand"="Basic-Fit"](area);
   way["brand"="Basic-Fit"](area);
 );
-out center;`;
+out center tags;`;
 
   fetch('https://overpass-api.de/api/interpreter', {
     method: 'POST',
@@ -234,17 +324,42 @@ out center;`;
   })
     .then(r => r.json())
     .then(data => {
-      allGyms = data.elements.map(el => ({
-        lat: el.lat || el.center?.lat,
-        lon: el.lon || el.center?.lon,
-        name: el.tags?.name || 'Basic-Fit',
-        addr: [el.tags?.['addr:city'], el.tags?.['addr:street']].filter(Boolean).join(' — '),
-      })).filter(g => g.lat && g.lon);
+      allGyms = data.elements.map(el => {
+        const t = el.tags || {};
+        return {
+          lat: el.lat || el.center?.lat,
+          lon: el.lon || el.center?.lon,
+          name: t.name || 'Basic-Fit',
+          street: t['addr:street'] || '',
+          housenumber: t['addr:housenumber'] || '',
+          postcode: t['addr:postcode'] || '',
+          city: t['addr:city'] || '',
+          phone: t.phone || t['contact:phone'] || '',
+          opening: t.opening_hours || '',
+          website: t.website || t['contact:website'] || '',
+        };
+      }).filter(g => g.lat && g.lon);
 
       allGyms.forEach(g => {
+        const addrLine = [g.housenumber, g.street].filter(Boolean).join(' ');
+        const cityLine = [g.postcode, g.city].filter(Boolean).join(' ');
+
+        const popupHtml = `
+          <div class="popup-content">
+            <div class="popup-name">🏋️ ${g.name}</div>
+            ${addrLine ? `<div class="popup-detail"><strong>Adresse</strong>${addrLine}</div>` : ''}
+            ${cityLine ? `<div class="popup-detail"><strong>Ville</strong>${cityLine}</div>` : ''}
+            ${g.phone ? `<div class="popup-detail"><strong>Tél</strong>${g.phone}</div>` : ''}
+            ${g.opening ? `<div class="popup-detail"><strong>Horaires</strong>${g.opening}</div>` : ''}
+            <div class="popup-btns">
+              <a class="popup-btn popup-btn-waze" href="https://waze.com/ul?ll=${g.lat},${g.lon}&navigate=yes" target="_blank">🚗 Waze</a>
+              <a class="popup-btn popup-btn-gmaps" href="https://www.google.com/maps/dir/?api=1&destination=${g.lat},${g.lon}" target="_blank">🗺️ Maps</a>
+            </div>
+          </div>`;
+
         L.marker([g.lat, g.lon], { icon: bfIcon })
           .addTo(map)
-          .bindPopup(`<b>${g.name}</b><br>${g.addr}`);
+          .bindPopup(popupHtml, { maxWidth: 280 });
       });
 
       document.getElementById('loader').style.display = 'none';
@@ -280,22 +395,33 @@ out center;`;
       .sort((a, b) => a.dist - b.dist)
       .slice(0, 10);
 
-    document.getElementById('results-list').innerHTML = sorted.map((g, i) => `
-      <div class="result-item">
-        <div class="result-info">
-          <div class="result-name">${i + 1}. ${g.name}</div>
-          <div class="result-dist">${g.dist.toFixed(1)} km</div>
-          ${g.addr ? `<div class="result-addr">${g.addr}</div>` : ''}
+    document.getElementById('results-list').innerHTML = sorted.map((g, i) => {
+      const addrLine = [g.housenumber, g.street].filter(Boolean).join(' ');
+      const cityLine = [g.postcode, g.city].filter(Boolean).join(' ');
+      return `
+        <div class="result-item">
+          <div class="result-top">
+            <div class="result-num">${i + 1}</div>
+            <div class="result-info">
+              <div class="result-name">${g.name}</div>
+              <div class="result-dist">${g.dist.toFixed(1)} km</div>
+              <div class="result-details">
+                ${addrLine ? `<span>📍 ${addrLine}</span>` : ''}
+                ${cityLine ? `<span>🏙️ ${cityLine}</span>` : ''}
+                ${g.phone ? `<span>📞 ${g.phone}</span>` : ''}
+                ${g.opening ? `<span>🕐 ${g.opening}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="result-btns">
+            <a class="btn-nav btn-waze" href="https://waze.com/ul?ll=${g.lat},${g.lon}&navigate=yes" target="_blank">🚗 Waze</a>
+            <a class="btn-nav btn-gmaps" href="https://www.google.com/maps/dir/?api=1&destination=${g.lat},${g.lon}" target="_blank">🗺️ Google Maps</a>
+          </div>
         </div>
-        <button class="btn-waze" onclick="openWaze(${g.lat}, ${g.lon})">🚗 Waze</button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     document.getElementById('results-panel').style.display = 'block';
-  }
-
-  function openWaze(lat, lon) {
-    window.open(`https://waze.com/ul?ll=${lat},${lon}&navigate=yes`, '_blank');
   }
 
   function closeResults() {
