@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Basic Fit — Posty78</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root {
+      --bg:     #0a0a0a;
+      --green:  #00cc44;
+      --green-dim: rgba(0,204,68,0.1);
+      --border: rgba(0,204,68,0.25);
+      --white:  #ffffff;
+      --muted:  #557755;
+      --font:   "Inter", system-ui, sans-serif;
+      --mono:   "JetBrains Mono", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--white);
+    }
+
+    #map {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* ─── Panneau haut ─── */
+    #top {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 400;
+      background: rgba(0,0,0,0.85);
+      border: 2px solid var(--green);
+      border-radius: 16px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+    }
+
+    #top h1 {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--green);
+      letter-spacing: 0.05em;
+    }
+
+    #btn-locate {
+      height: 42px;
+      padding: 0 20px;
+      background: var(--green);
+      color: #000;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--font);
+      white-space: nowrap;
+    }
+
+    #btn-locate:hover { opacity: 0.88; }
+
+    /* ─── Panneau résultats ─── */
+    #results-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 400;
+      background: rgba(0,0,0,0.92);
+      border-top: 2px solid var(--green);
+      border-radius: 20px 20px 0 0;
+      padding: 16px;
+      max-height: 55vh;
+      overflow-y: auto;
+      display: none;
+      backdrop-filter: blur(12px);
+    }
+
+    #results-panel h2 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+
+    .result-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0,204,68,0.1);
+    }
+
+    .result-item:last-child { border-bottom: none; }
+
+    .result-info { flex: 1; }
+
+    .result-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 3px;
+    }
+
+    .result-dist {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--green);
+    }
+
+    .result-addr {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .btn-waze {
+      height: 38px;
+      padding: 0 14px;
+      background: #33ccff;
+      color: #000;
+      font-size: 13px;
+      font-weight: 800;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: var(--font);
+      flex-shrink: 0;
+    }
+
+    /* ─── Loader ─── */
+    #loader {
+      position: absolute;
+      inset: 0;
+      z-index: 1000;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    #loader p { font-size: 13px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid rgba(0,204,68,0.2);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .leaflet-control-zoom a {
+      background: #111 !important;
+      color: var(--white) !important;
+      border-color: var(--border) !important;
+    }
+
+    .leaflet-control-attribution {
+      background: rgba(0,0,0,0.5) !important;
+      color: var(--muted) !important;
+      font-size: 10px !important;
+    }
+
+    #close-results {
+      float: right;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      margin-top: -2px;
+    }
+
+    @media (max-width: 480px) {
+      #top { padding: 10px 14px; gap: 8px; }
+      #top h1 { font-size: 13px; }
+      #btn-locate { height: 36px; padding: 0 14px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="spinner"></div>
+  <p>Chargement des Basic Fit…</p>
+</div>
+
+<div id="map"></div>
+
+<div id="top">
+  <h1>🏋️ Basic Fit France</h1>
+  <button id="btn-locate">📍 Me localiser</button>
+</div>
+
+<div id="results-panel">
+  <h2>
+    Les 10 Basic Fit les plus proches
+    <button id="close-results" onclick="closeResults()">✕</button>
+  </h2>
+  <div id="results-list"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ─── Carte ───────────────────────────────────────────────────────────────
+  const map = L.map('map', { zoomControl: true }).setView([46.6, 1.9], 6);
+
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 19
+  }).addTo(map);
+
+  // ─── Icône Basic Fit ─────────────────────────────────────────────────────
+  const bfIcon = L.divIcon({
+    className: '',
+    html: `<div style="
+      width:28px;height:28px;
+      background:#00cc44;
+      border:2px solid #000;
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;line-height:1;
+    ">🏋️</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+
+  const userIcon = L.divIcon({
+    className: '',
+    html: `<div style="
+      width:18px;height:18px;
+      background:#3b82f6;
+      border:3px solid #fff;
+      border-radius:50%;
+    "></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+
+  // ─── Données Basic Fit via Overpass ──────────────────────────────────────
+  let allGyms = [];
+  let userMarker = null;
+  let userPos = null;
+
+  const overpassUrl = `https://overpass-api.de/api/interpreter?data=` +
+    encodeURIComponent(`[out:json][timeout:25];
+      (
+        node["brand"="Basic-Fit"](42,(-5),52,10);
+        way["brand"="Basic-Fit"](42,(-5),52,10);
+      );
+      out center;`);
+
+  fetch(overpassUrl)
+    .then(r => r.json())
+    .then(data => {
+      allGyms = data.elements.map(el => ({
+        lat: el.lat || el.center?.lat,
+        lon: el.lon || el.center?.lon,
+        name: el.tags?.name || 'Basic-Fit',
+        addr: [el.tags?.['addr:city'], el.tags?.['addr:street']].filter(Boolean).join(' — '),
+      })).filter(g => g.lat && g.lon);
+
+      // Afficher tous les points
+      allGyms.forEach(g => {
+        L.marker([g.lat, g.lon], { icon: bfIcon })
+          .addTo(map)
+          .bindPopup(`<b>${g.name}</b><br>${g.addr}`);
+      });
+
+      document.getElementById('loader').style.display = 'none';
+    })
+    .catch(() => {
+      document.getElementById('loader').innerHTML =
+        '<p style="color:#ef4444">Erreur de chargement</p>';
+    });
+
+  // ─── Localisation ─────────────────────────────────────────────────────────
+  document.getElementById('btn-locate').addEventListener('click', () => {
+    if (!navigator.geolocation) return alert('Géolocalisation non supportée');
+
+    navigator.geolocation.getCurrentPosition(pos => {
+      userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+
+      if (userMarker) userMarker.remove();
+      userMarker = L.marker([userPos.lat, userPos.lon], { icon: userIcon })
+        .addTo(map)
+        .bindPopup('📍 Vous êtes ici')
+        .openPopup();
+
+      map.setView([userPos.lat, userPos.lon], 11);
+
+      showNearest();
+    }, () => alert('Impossible de te localiser'));
+  });
+
+  // ─── Distance ─────────────────────────────────────────────────────────────
+  function distKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+      Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(a));
+  }
+
+  // ─── Afficher les 10 plus proches ─────────────────────────────────────────
+  function showNearest() {
+    if (!userPos || !allGyms.length) return;
+
+    const sorted = allGyms
+      .map(g => ({ ...g, dist: distKm(userPos.lat, userPos.lon, g.lat, g.lon) }))
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, 10);
+
+    const list = document.getElementById('results-list');
+    list.innerHTML = sorted.map((g, i) => `
+      <div class="result-item">
+        <div class="result-info">
+          <div class="result-name">${i + 1}. ${g.name}</div>
+          <div class="result-dist">${g.dist.toFixed(1)} km</div>
+          ${g.addr ? `<div class="result-addr">${g.addr}</div>` : ''}
+        </div>
+        <button class="btn-waze" onclick="openWaze(${g.lat}, ${g.lon})">
+          🚗 Waze
+        </button>
+      </div>
+    `).join('');
+
+    document.getElementById('results-panel').style.display = 'block';
+  }
+
+  function openWaze(lat, lon) {
+    window.open(`https://waze.com/ul?ll=${lat},${lon}&navigate=yes`, '_blank');
+  }
+
+  function closeResults() {
+    document.getElementById('results-panel').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
