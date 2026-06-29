@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#000000"/>
+  <!-- Barre haltère -->
+  <rect x="8" y="29" width="48" height="6" rx="3" fill="#00cc44"/>
+  <!-- Poids gauche -->
+  <rect x="6" y="20" width="10" height="24" rx="4" fill="#00cc44"/>
+  <!-- Poids droite -->
+  <rect x="48" y="20" width="10" height="24" rx="4" fill="#00cc44"/>
+  <!-- Poignée gauche -->
+  <rect x="16" y="26" width="6" height="12" rx="2" fill="#003300"/>
+  <!-- Poignée droite -->
+  <rect x="42" y="26" width="6" height="12" rx="2" fill="#003300"/>
+</svg>

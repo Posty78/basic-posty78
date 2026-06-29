@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Basic Fit — Posty78</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet" />
@@ -24,19 +25,10 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { width: 100%; height: 100%; overflow: hidden; }
 
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--white);
-    }
+    body { font-family: var(--font); background: var(--bg); color: var(--white); }
 
-    #map {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-    }
+    #map { position: absolute; inset: 0; z-index: 0; }
 
-    /* ─── Panneau haut ─── */
     #top {
       position: absolute;
       top: 16px;
@@ -54,12 +46,7 @@
       white-space: nowrap;
     }
 
-    #top h1 {
-      font-size: 16px;
-      font-weight: 900;
-      color: var(--green);
-      letter-spacing: 0.05em;
-    }
+    #top h1 { font-size: 16px; font-weight: 900; color: var(--green); letter-spacing: 0.05em; }
 
     #btn-locate {
       height: 42px;
@@ -72,12 +59,10 @@
       border-radius: 10px;
       cursor: pointer;
       font-family: var(--font);
-      white-space: nowrap;
     }
 
     #btn-locate:hover { opacity: 0.88; }
 
-    /* ─── Panneau résultats ─── */
     #results-panel {
       position: absolute;
       bottom: 0;
@@ -113,27 +98,10 @@
     }
 
     .result-item:last-child { border-bottom: none; }
-
     .result-info { flex: 1; }
-
-    .result-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--white);
-      margin-bottom: 3px;
-    }
-
-    .result-dist {
-      font-size: 12px;
-      font-family: var(--mono);
-      color: var(--green);
-    }
-
-    .result-addr {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
+    .result-name { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+    .result-dist { font-size: 12px; font-family: var(--mono); color: var(--green); }
+    .result-addr { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
     .btn-waze {
       height: 38px;
@@ -150,7 +118,6 @@
       flex-shrink: 0;
     }
 
-    /* ─── Loader ─── */
     #loader {
       position: absolute;
       inset: 0;
@@ -166,8 +133,7 @@
     #loader p { font-size: 13px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
 
     .spinner {
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border: 2px solid rgba(0,204,68,0.2);
       border-top-color: var(--green);
       border-radius: 50%;
@@ -195,8 +161,6 @@
       color: var(--muted);
       font-size: 20px;
       cursor: pointer;
-      line-height: 1;
-      margin-top: -2px;
     }
 
     @media (max-width: 480px) {
@@ -230,7 +194,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  // ─── Carte ───────────────────────────────────────────────────────────────
   const map = L.map('map', { zoomControl: true }).setView([46.6, 1.9], 6);
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -238,47 +201,37 @@
     maxZoom: 19
   }).addTo(map);
 
-  // ─── Icône Basic Fit ─────────────────────────────────────────────────────
   const bfIcon = L.divIcon({
     className: '',
-    html: `<div style="
-      width:28px;height:28px;
-      background:#00cc44;
-      border:2px solid #000;
-      border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      font-size:14px;line-height:1;
-    ">🏋️</div>`,
+    html: `<div style="width:28px;height:28px;background:#00cc44;border:2px solid #000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;">🏋️</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14]
   });
 
   const userIcon = L.divIcon({
     className: '',
-    html: `<div style="
-      width:18px;height:18px;
-      background:#3b82f6;
-      border:3px solid #fff;
-      border-radius:50%;
-    "></div>`,
+    html: `<div style="width:18px;height:18px;background:#3b82f6;border:3px solid #fff;border-radius:50%;"></div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9]
   });
 
-  // ─── Données Basic Fit via Overpass ──────────────────────────────────────
   let allGyms = [];
   let userMarker = null;
   let userPos = null;
 
-  const overpassUrl = `https://overpass-api.de/api/interpreter?data=` +
-    encodeURIComponent(`[out:json][timeout:25];
-      (
-        node["brand"="Basic-Fit"](42,(-5),52,10);
-        way["brand"="Basic-Fit"](42,(-5),52,10);
-      );
-      out center;`);
+  /* ─── Requête Overpass — France uniquement ─── */
+  const query = `[out:json][timeout:30];
+area["ISO3166-1"="FR"][admin_level=2];
+(
+  node["brand"="Basic-Fit"](area);
+  way["brand"="Basic-Fit"](area);
+);
+out center;`;
 
-  fetch(overpassUrl)
+  fetch('https://overpass-api.de/api/interpreter', {
+    method: 'POST',
+    body: 'data=' + encodeURIComponent(query)
+  })
     .then(r => r.json())
     .then(data => {
       allGyms = data.elements.map(el => ({
@@ -288,7 +241,6 @@
         addr: [el.tags?.['addr:city'], el.tags?.['addr:street']].filter(Boolean).join(' — '),
       })).filter(g => g.lat && g.lon);
 
-      // Afficher tous les points
       allGyms.forEach(g => {
         L.marker([g.lat, g.lon], { icon: bfIcon })
           .addTo(map)
@@ -298,59 +250,44 @@
       document.getElementById('loader').style.display = 'none';
     })
     .catch(() => {
-      document.getElementById('loader').innerHTML =
-        '<p style="color:#ef4444">Erreur de chargement</p>';
+      document.getElementById('loader').innerHTML = '<p style="color:#ef4444">Erreur de chargement</p>';
     });
 
-  // ─── Localisation ─────────────────────────────────────────────────────────
   document.getElementById('btn-locate').addEventListener('click', () => {
     if (!navigator.geolocation) return alert('Géolocalisation non supportée');
-
     navigator.geolocation.getCurrentPosition(pos => {
       userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-
       if (userMarker) userMarker.remove();
       userMarker = L.marker([userPos.lat, userPos.lon], { icon: userIcon })
-        .addTo(map)
-        .bindPopup('📍 Vous êtes ici')
-        .openPopup();
-
+        .addTo(map).bindPopup('📍 Vous êtes ici').openPopup();
       map.setView([userPos.lat, userPos.lon], 11);
-
       showNearest();
     }, () => alert('Impossible de te localiser'));
   });
 
-  // ─── Distance ─────────────────────────────────────────────────────────────
   function distKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 +
-      Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
     return R * 2 * Math.asin(Math.sqrt(a));
   }
 
-  // ─── Afficher les 10 plus proches ─────────────────────────────────────────
   function showNearest() {
     if (!userPos || !allGyms.length) return;
-
     const sorted = allGyms
       .map(g => ({ ...g, dist: distKm(userPos.lat, userPos.lon, g.lat, g.lon) }))
       .sort((a, b) => a.dist - b.dist)
       .slice(0, 10);
 
-    const list = document.getElementById('results-list');
-    list.innerHTML = sorted.map((g, i) => `
+    document.getElementById('results-list').innerHTML = sorted.map((g, i) => `
       <div class="result-item">
         <div class="result-info">
           <div class="result-name">${i + 1}. ${g.name}</div>
           <div class="result-dist">${g.dist.toFixed(1)} km</div>
           ${g.addr ? `<div class="result-addr">${g.addr}</div>` : ''}
         </div>
-        <button class="btn-waze" onclick="openWaze(${g.lat}, ${g.lon})">
-          🚗 Waze
-        </button>
+        <button class="btn-waze" onclick="openWaze(${g.lat}, ${g.lon})">🚗 Waze</button>
       </div>
     `).join('');
 
